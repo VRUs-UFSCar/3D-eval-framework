@@ -6,6 +6,7 @@ from nuscenes.eval.detection.data_classes import DetectionBox
 import json
 import numpy as np
 from nuscenes.eval.common.config import config_factory
+import os
 
 '''
 Esse script tem como objetivo pré-processar (filtar) os resultados de previsões para a base de dados NuScenes.
@@ -23,7 +24,7 @@ if __name__ == "__main__":
                         help='Which version of the nuScenes GTs to get GTs, e.g. v1.0-trainval.')
     parser.add_argument('--verbose', type=int, default=1,
                         help='Whether to print to stdout.')
-    parser.add_argument('--dataroot', type=str, default='data',
+    parser.add_argument('--dataroot', type=str, default='data/nuscenes',
                         help='Default nuScenes data directory.')
 
     args = parser.parse_args()
@@ -66,5 +67,6 @@ if __name__ == "__main__":
 
     if output_path == '':
         output_path = f'{input_path[:-5]}_filtered.json'
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, 'w', encoding='utf-8') as file:
         json.dump(gts_json_final, file, ensure_ascii=False, indent=4)

@@ -29,6 +29,33 @@ from nuscenes.eval.detection.data_classes import (
 from nuscenes.eval.detection.render import class_pr_curve, class_tp_curve, dist_pr_curve, summary_plot, visualize_sample
 from nuscenes.eval.detection.evaluate import DetectionEval
 
+def load_gts(result_path: str, max_boxes_per_sample: int, box_cls, verbose: bool = False) \
+        -> Tuple[EvalBoxes, Dict]:
+    """
+    Loads object predictions from GTs JSON file.
+    :param result_path: Path to the .json result file provided by the user.
+    :param max_boxes_per_sample: Maximim number of boxes allowed per sample.
+    :param box_cls: Type of box to load, e.g. DetectionBox or TrackingBox.
+    :param verbose: Whether to print messages to stdout.
+    :return: The deserialized results and meta data.
+    """
+
+    # Load from file and check that the format is correct.
+    with open(result_path) as f:
+        data = json.load(f)
+
+    # Deserialize results and get meta data.
+    all_results = EvalBoxes.deserialize(data, box_cls)
+    if verbose:
+        print("Loaded results from {}. Found detections for {} samples."
+              .format(result_path, len(all_results.sample_tokens)))
+
+    # Check that each sample has no more than x predicted boxes.
+    for sample_token in all_results.sample_tokens:
+        assert len(all_results.boxes[sample_token]) <= max_boxes_per_sample, \
+            "Error: Only <= %d boxes per sample allowed!" % max_boxes_per_sample
+
+    return all_results
 
 class GenericDetectionEval(DetectionEval):
     """
@@ -51,10 +78,8 @@ class GenericDetectionEval(DetectionEval):
     Please see https://www.nuscenes.org/object-detection for more details.
     """
     def __init__(self,
-                 nusc: NuScenes,
                  config: DetectionConfig,
                  result_path: str,
-                 eval_set: str,
                  output_dir: str = None,
                  verbose: bool = True):
         """
@@ -66,9 +91,7 @@ class GenericDetectionEval(DetectionEval):
         :param output_dir: Folder to save plots and results to.
         :param verbose: Whether to print to stdout.
         """
-        self.nusc = nusc
         self.result_path = result_path
-        self.eval_set = eval_set
         self.output_dir = output_dir
         self.verbose = verbose
         self.cfg = config
@@ -87,21 +110,9 @@ class GenericDetectionEval(DetectionEval):
         if verbose:
             print('Initializing nuScenes detection evaluation')
         self.pred_boxes, self.meta = load_prediction(self.result_path, self.cfg.max_boxes_per_sample, DetectionBox, verbose=verbose)
-        self.gt_boxes, _ = load_prediction('scripts/nusc_eval/gts/detection_trainval_val.json', self.cfg.max_boxes_per_sample, DetectionBox, verbose=verbose)
+        self.gt_boxes = load_gts('gts/detection_trainval_val.json', self.cfg.max_boxes_per_sample, DetectionBox, verbose=verbose)
 
         assert set(self.pred_boxes.sample_tokens) == set(self.gt_boxes.sample_tokens), \
             "Samples in split doesn't match samples in predictions."
-
-        # Add center distances.
-        self.pred_boxes = add_center_dist(nusc, self.pred_boxes)
-        self.gt_boxes = add_center_dist(nusc, self.gt_boxes)
-
-        # Filter boxes (distance, points per box, etc.).
-        # if verbose:
-        #    print('Filtering predictions')
-        # self.pred_boxes = filter_eval_boxes(nusc, self.pred_boxes, self.cfg.class_range, verbose=verbose)
-        #if verbose:
-        #    print('Filtering ground truth annotations')
-        #self.gt_boxes = filter_eval_boxes(nusc, self.gt_boxes, self.cfg.class_range, verbose=verbose)
 
         self.sample_tokens = self.gt_boxes.sample_tokens

@@ -6,6 +6,7 @@ from nuscenes.eval.detection.data_classes import DetectionBox
 import json
 import numpy as np
 from nuscenes.eval.common.config import config_factory
+import os
 
 '''
 Esse script tem como objetivo gerar um JSON das GTs da NuScenes.
@@ -16,7 +17,7 @@ Verifique os argumentos abaixo para possíveis configurações deste script
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Transform NuScenes GTs database into JSON file.',
                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--dataroot', type=str, default='data',
+    parser.add_argument('--dataroot', type=str, default='data/nuscenes',
                         help='Default nuScenes data directory.')
     parser.add_argument('--eval_set', type=str, default='val',
                         help='Which dataset split to get GTs on, train, val or test.')
@@ -25,7 +26,7 @@ if __name__ == "__main__":
     parser.add_argument('--verbose', type=int, default=1,
                         help='Whether to print to stdout.')
     parser.add_argument('--save_path', type=str, default='',
-                        help='Where the JSON with GTs will be saved. If not specified, it will be saved in this path: scripts/nusc_eval/gts/detection_<version>_<eval_set>.json')
+                        help='Where the JSON with GTs will be saved. If not specified, it will be saved in this path: gts/detection_<version>_<eval_set>.json')
     
     args = parser.parse_args()
 
@@ -56,16 +57,11 @@ if __name__ == "__main__":
                 elif isinstance(value, np.ndarray):
                     box[key] = value.tolist()
     
-
-    gts_json_final = {
-        'results': gts_json,
-        'meta': {}
-    }
-    
     if verbose_:
         print('Saving JSON to disk...')
 
     if save_path_ == '':
-        save_path_ = f'scripts/nusc_eval/gts/detection_{version_[5:]}_{eval_set_}.json'
+        save_path_ = os.path.join('gts', f'detection_{version_[5:]}_{eval_set_}.json')
+    os.makedirs(os.path.dirname(save_path_), exist_ok=True)
     with open(save_path_, 'w', encoding='utf-8') as file:
-        json.dump(gts_json_final, file, ensure_ascii=False, indent=4)
+        json.dump(gts_json, file, ensure_ascii=False, indent=4)
