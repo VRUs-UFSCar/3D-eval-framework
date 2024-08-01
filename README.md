@@ -1,16 +1,43 @@
 
-# Framework avaliação nuScenes 3D
+# Framework de avaliação 3D
 
-Para avaliar o desempenho dos modelos que fazem previsões de boxes 3D, é preciso que sejam geradas as detecções/inferências em toda a base de dados de validação da nuScenes. O formato do JSON esperado é informado na [página do desafio de detecção](https://nuscenes.org/object-detection).
+Este repositório possui scripts Python para avaliar predições de bounding boxes 3D. A avaliação é feita nos moldes da [competição de detecção da base de dados NuScenes](https://www.nuscenes.org/object-detection).
 
-Com o código disponível em `eval.py` é possível calculcar as métricas que o modelo obteve no conjunto de validação.
+## Instalação via docker
 
-Para calcular as métricas, execute o seguinte comando (dentro do repositório raiz do projeto):
+Para utilizar os scripts neste repositório é recomendado fazer a instalação via Docker.
 
-`python scripts/nusc_eval/eval.py [caminho-json] --output_dir [caminho-saida-metricas]`
+Para instanciar um container para a execução dos scripts, siga os passos abaixo:
 
-Neste comando, substitua os placeholders:
-- `[caminho-json]`: caminho relativo à raiz do projeto até o arquivo em que está salvo o JSON contendo as detecções do modelo. Recomenda-se colocar esse JSON no seguinte caminho: `outputs/multi_modality/[nome-modelo]/detections_val.json`
-- `[caminho-saida-metricas]`: caminho onde serão salvas as métricas calculadas pelo código. Recomenda-se definir o caminho seguindo o padrão `outputs/multi_modality/[nome-modelo]/metrics`
+1- Crie a imagem utilizando o Dockerfile contido neste repositório:
 
-Existem outros argumentos que podem ser usados para a execução do script de avaliação. Para tal, consulte o código `eval.py`
+`docker build -t 3d-eval-framework .`
+
+2- Crie um container executando esse comando:
+
+```
+docker run -it \
+  -v [gts-path]:/app/gts \
+  -v [nuscenes-dataset-path]:/app/data/nuscenes \
+  -v [output-path]:/app/outputs \
+  3d-eval-framework /bin/bash
+```
+
+Antes de executar o comando acima, substitua os valores marcados:
+- `[gts-path]`: caminho onde os JSONs *ground truth* (GT) estão armazenados na máquina real. Não é obrigatório fornecer isso, mas é recomendado para não precisar gerar esses JSONs toda vez que for usar os scripts contidos aqui.
+- `[nuscenes-dataset-path]`: caminho onde a base de dados da NuScenes está armazenada na máquina real. É necessário fornecer esse caminho apenas quando for usar os scripts na pasta `nuscenes_scripts`.
+- `[output-path]`: caminho onde os JSONs de previsões estão armazenados na máquina real. Esse caminho pode ser usado para salvar resultados de scripts também.
+
+Após instanciar o container, é possível executar os scripts que serão descritos a seguir.
+
+## Utilizando o script de avaliação genérico
+
+[TODO]
+
+### Padrão dos arquivos JSON
+
+[TODO]
+
+## Avaliando modelos na base de dados NuScenes
+
+[TODO]
