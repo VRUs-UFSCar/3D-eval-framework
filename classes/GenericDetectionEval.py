@@ -30,14 +30,14 @@ from nuscenes.eval.detection.render import class_pr_curve, class_tp_curve, dist_
 from nuscenes.eval.detection.evaluate import DetectionEval
 
 def load_gts(result_path: str, max_boxes_per_sample: int, box_cls, verbose: bool = False) \
-        -> Tuple[EvalBoxes, Dict]:
+        -> EvalBoxes:
     """
     Loads object predictions from GTs JSON file.
     :param result_path: Path to the .json result file provided by the user.
     :param max_boxes_per_sample: Maximim number of boxes allowed per sample.
     :param box_cls: Type of box to load, e.g. DetectionBox or TrackingBox.
     :param verbose: Whether to print messages to stdout.
-    :return: The deserialized results and meta data.
+    :return: The deserialized results.
     """
 
     # Load from file and check that the format is correct.
@@ -56,6 +56,28 @@ def load_gts(result_path: str, max_boxes_per_sample: int, box_cls, verbose: bool
             "Error: Only <= %d boxes per sample allowed!" % max_boxes_per_sample
 
     return all_results
+
+
+def filter_eval_boxes(boxes: EvalBoxes, classes_filter: dict[str, list[str]]) -> EvalBoxes:
+    new_boxes = EvalBoxes()
+    old_classes_to_new_classes_map: dict[str, str] = {}
+    for new_class, old_classes_list in classes_filter.items():
+        for old_class in old_classes_list:
+            old_classes_to_new_classes_map[old_class] = new_class
+    
+    for sample_token in boxes.sample_tokens:
+        old_sample_boxes: list[DetectionBox] = boxes[sample_token]
+        new_sample_boxes: list[DetectionBox] = []
+
+        for old_box in old_sample_boxes:
+            if old_box.detection_name in old_classes_to_new_classes_map:
+                old_box.detection_name = old_classes_to_new_classes_map[old_box.detection_name]
+                new_sample_boxes.append(old_box)
+
+        new_boxes.add_boxes(sample_token, new_sample_boxes)
+    
+    return new_boxes
+
 
 class GenericDetectionEval(DetectionEval):
     """
@@ -80,6 +102,8 @@ class GenericDetectionEval(DetectionEval):
     def __init__(self,
                  config: DetectionConfig,
                  result_path: str,
+                 gts_path: str,
+                 filter_path: str = None,
                  output_dir: str = None,
                  verbose: bool = True):
         """
@@ -110,7 +134,20 @@ class GenericDetectionEval(DetectionEval):
         if verbose:
             print('Initializing nuScenes detection evaluation')
         self.pred_boxes, self.meta = load_prediction(self.result_path, self.cfg.max_boxes_per_sample, DetectionBox, verbose=verbose)
-        self.gt_boxes = load_gts('gts/detection_trainval_val.json', self.cfg.max_boxes_per_sample, DetectionBox, verbose=verbose)
+        self.gt_boxes = load_gts(gts_path, self.cfg.max_boxes_per_sample, DetectionBox, verbose=verbose)
+
+        if filter_path:
+            if verbose:
+                print('Filtering classes')
+            
+            with open(filter_path, mode='r') as json_file:
+                classes_filter = json.load(json_file)
+            
+            print(classes_filter)
+            self.cfg.class_names = list(classes_filter.keys())
+
+            self.pred_boxes = filter_eval_boxes(self.pred_boxes, classes_filter)
+            self.gt_boxes = filter_eval_boxes(self.gt_boxes, classes_filter)
 
         assert set(self.pred_boxes.sample_tokens) == set(self.gt_boxes.sample_tokens), \
             "Samples in split doesn't match samples in predictions."

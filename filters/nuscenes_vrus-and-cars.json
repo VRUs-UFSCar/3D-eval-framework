@@ -1,0 +1,6 @@
+{
+    "car": ["car"],
+    "pedestrian": ["pedestrian"],
+    "bicycle": ["bicycle"],
+    "motorcycle": ["motorcycle"]
+}
