@@ -1,11 +1,9 @@
 
 import argparse
 import os
-from nuscenes import NuScenes
 from nuscenes.eval.common.config import config_factory
 import json
 from nuscenes.eval.detection.data_classes import DetectionConfig
-from nuscenes.eval.detection.evaluate import DetectionEval
 from classes.GenericDetectionEval import GenericDetectionEval
 
 

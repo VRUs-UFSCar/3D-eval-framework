@@ -1,32 +1,18 @@
 # nuScenes dev-kit.
 # Code written by Holger Caesar & Oscar Beijbom, 2018.
 
-import argparse
 import json
 import os
-import random
-import time
-from typing import Any, Dict, List, Tuple
 
-import numpy as np
-from nuscenes import NuScenes
-from nuscenes.eval.common.config import config_factory
 from nuscenes.eval.common.data_classes import EvalBoxes
 from nuscenes.eval.common.loaders import (
-    add_center_dist,
     filter_eval_boxes,
-    load_gt,
     load_prediction
 )
-from nuscenes.eval.detection.algo import accumulate, calc_ap, calc_tp
-from nuscenes.eval.detection.constants import TP_METRICS
 from nuscenes.eval.detection.data_classes import (
     DetectionBox,
-    DetectionConfig,
-    DetectionMetricDataList,
-    DetectionMetrics,
+    DetectionConfig
 )
-from nuscenes.eval.detection.render import class_pr_curve, class_tp_curve, dist_pr_curve, summary_plot, visualize_sample
 from nuscenes.eval.detection.evaluate import DetectionEval
 
 def load_gts(result_path: str, max_boxes_per_sample: int, box_cls, verbose: bool = False) -> EvalBoxes:
