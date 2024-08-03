@@ -141,4 +141,20 @@ Este filtro pode ser utilizado na avaliação da NuScenes, por exemplo. Neste ca
 
 ## Avaliando modelos na base de dados NuScenes
 
-[TODO]
+Para fazer a validação na base de dados da nuScenes, existem dois scripts que precisam ser utilizados antes do script de avaliação `eval.py`:
+
+1- O primeiro script que precisa ser utilizado é responsável por gerar o JSON com os GTs da base de dados da NuScenes. É preciso ter toda a base de dados instalada no diretório `data/nuscenes` para fazer isso. Para criar o JSON, execute o comando abaixo:
+
+```
+python nuscenes_scripts/generate_nuscenes_gts.py
+```
+
+Ao executar esse script, as GTs serão criadas no caminho `gts/detection_trainval_val.json`. É possível configurar esse script por argumentos também, verifique o código disponível em `nuscenes_scripts/generate_nuscenes_gts.py`.
+
+2- O segundo script faz um filtro de algumas bounding boxes contidas nas previsões. Essa filtragem é a mesma que é feita no [pré-processamento da avaliação da NuScenes](https://www.nuscenes.org/object-detection). Para fazer essa filtragem execute o comando abaixo:
+
+```
+python nuscenes_scripts/filter_nuscenes_boxes.py [input_path]
+```
+
+Onde `[input_path]` deve ser substituido pelo caminho onde o JSON das previsões estão armazenados. Ao executar o script, o JSON com os bounding boxes filtrados serão guardados no mesmo caminho do arquivo original, em um arquivo JSON com o mesmo nome com a adição de um pós-fixo de `_filtered`. É possível configurar esse script por argumentos também, verifique o código disponível em `nuscenes_scripts/filter_nuscenes_boxes.py`.
