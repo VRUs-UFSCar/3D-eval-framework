@@ -21,11 +21,11 @@ if __name__ == "__main__":
                         - nuscenes_vrus-and-cars: utiliza GTs do desafio de detecção NuScenes (em `gts/detection_trainval_val.json`) utilizando o filtro para pedestre, ciclista, motociclista e carros. O filtro usado está disponível em `filters/nuscenes_vrus-and-cars.json`.
                         - nuscenes_vrus: utiliza GTs do desafio de detecção NuScenes (em `gts/detection_trainval_val.json`) utilizando o filtro para VRUs (pedestre, ciclista e motociclista). O filtro usado está disponível em `filters/nuscenes_vrus.json`.
 
-                        OBS: os filtros usados aqui podem ser sobrescritos pelo argumento "
+                        OBS: os filtros usados aqui podem ser sobrescritos pelo argumento "--filter-path"
                         ''')
-    parser.add_argument('result_path', type=str, help='O caminho para o arquivo contendo as predições')
-    parser.add_argument('--output_dir', type=str, default='~/nuscenes-metrics',
-                        help='Local onde os resultados serão armazenados (métricas, gráficos, etc,)')
+    parser.add_argument('result_path', type=str, help='O caminho para o arquivo JSON contendo as predições')
+    parser.add_argument('--output_dir', type=str, default='./metrics',
+                        help='Local onde os resultados serão armazenados (métricas, gráficos, etc.). Caso não seja fornecido, será salvo em `./metrics`.')
     parser.add_argument('--filter_path', type=str, default='',
                         help='Caminho para o JSON com os filtros de classes. Caso não seja fornecido, nenhum filtro será aplicado.')
     parser.add_argument('--config_path', type=str, default='',
