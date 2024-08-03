@@ -67,7 +67,7 @@ O script `eval.py` pode utilizar vários arquivos JSON em sua execução. Os pad
 
 #### Padrão dos GTs
 
-O arquivo JSON contendo os GTs, que deve ser passado no argumento `[gts_path]`, segue um padrão bem parecido com os [resultados do desafio da NuScenes](), descrito logo abaixo:
+O arquivo JSON contendo os GTs, que deve ser passado no argumento `[gts_path]`, segue um padrão bem parecido com os [resultados do desafio da NuScenes](https://www.nuscenes.org/object-detection), descrito logo abaixo:
 
 ```
 {
@@ -82,16 +82,62 @@ O arquivo JSON contendo os GTs, que deve ser passado no argumento `[gts_path]`, 
       "detection_score" "float"         // Não é obrigatório, mas se for passado, deve ser sempre -1 (já que são GTs, esse valor funciona para as predições)
       "attribute_name": "str"           // Atributo do objeto atual (exemplo: vehicle.moving, vehicle.parked). Pode ser uma string vazia "" se não houver esse tipo de atributo para o objeto.
     }
-    ...  // Segue o mesmo padrão definido acima para todas as bounding boxes
+    ...                                 // Segue o mesmo padrão definido acima para todas as bounding boxes
   ]
 }
 ```
 
 ### Padrão das predições
 
+O arquivo JSON contendo as predições, que deve ser passado no argumento `[result_path]`, segue o padrão definido na [competição de detecção da NuScenes](https://www.nuscenes.org/object-detection). Este padrão está descrito logo abaixo:
+
+```
+{
+  "meta": {
+        "use_camera":   <bool>                // Se o modelo utilizou dados de câmera, marcar como verdadeiro.
+        "use_lidar":    <bool>                // Se o modelo utilizou dados de LiDAR, marcar como verdadeiro.
+        "use_radar":    <bool>                // Se o modelo utilizou dados de radar, marcar como verdadeiro.
+        "use_map":      <bool>                // Se o modelo utilizou dados de mapa, marcar como verdadeiro.
+        "use_external": <bool>                // Se o modelo utilizou dados externos, marcar como verdadeiro.
+    },
+    "results": {
+        sample_token : [                      // Para cada sample da base de dados, deve ser fornecido uma lista com informações das bounding boxes veradeiras (GTs). Cada sample precisa ser identificada unicamente por um "sample_token"
+          {
+            "sample_token": "str"             // Uma string contendo o "sample_token" o qual a bounding box pertence. Deve ser o mesmo valor da chave utilizada para salvar a lista de bounding boxes.
+            "translation": "list = float[3]"  // Uma lista contendo 3 valores de ponto flutuante, representando a posição global da bbox. Segue o padrão [<center_x>, <center_y>, <center_z>].
+            "size": "list = float[3]"         // Uma lista contendo 3 valores de ponto flutuante, representando o tamanho da bbox. Segue o padrão [<width>, <length>, <height>].
+            "rotation": "list = float[4]"     // Uma lista contendo 4 valores de ponto flutuante, representando a rotação da bbox. Segue o padrão [<w>, <x>, <y>, <z>].
+            "velocity": "list = float[2]"     // Uma lista contendo 2 valores de ponto flutuante, representando a velocidade da bbox. Segue o padrão [<vx>, <vy>].
+            "detection_name": "str"           // Nome da classe que deve ser prevista.
+            "detection_score" "float"         // Pontuação obtida pela classe definida em "detection_name"
+            "attribute_name": "str"           // Atributo do objeto atual (exemplo: vehicle.moving, vehicle.parked). Pode ser uma string vazia "" se não houver esse tipo de atributo para o objeto.
+          }
+          ...                                 // Segue o mesmo padrão definido acima para todas as bounding boxes
+        ]
+    }
+}
+```
+
 ### Padrão do filtro
 
-[TODO]
+O JSON contendo o filtro, que pode ser passado no argumento `[filter_path]`, deve seguir o seguinte formato:
+
+```
+{
+  new_class_name: "list[str]"  // É um JSON o qual as chaves são novos nomes para as classes e os valores são listas contendo nomes de classes antigos (que estavam no GTs e predições originalmente)
+                               // OBS: todos os nomes de classes antigas que não aparecerem em nenhuma das lista de valores serão removidas da avaliação final
+}
+```
+
+Um exemplo de filtro é fornecido logo abaixo:
+
+```
+{
+    "VRU": ["pedestrian", "bicycle", "motorcycle"]
+}
+```
+
+Este filtro pode ser utilizado na avaliação da NuScenes, por exemplo. Neste caso, as classes antigas de *pedestrian*, *bicycle* e *motorcycle* serão trocadas por apenas uma classe chamada "VRU". Todas as outras classes que não constam nesse JSON (como "car", "barrier", etc.) serão removidas da avaliação.
 
 ## Avaliando modelos na base de dados NuScenes
 
