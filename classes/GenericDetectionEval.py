@@ -29,15 +29,14 @@ from nuscenes.eval.detection.data_classes import (
 from nuscenes.eval.detection.render import class_pr_curve, class_tp_curve, dist_pr_curve, summary_plot, visualize_sample
 from nuscenes.eval.detection.evaluate import DetectionEval
 
-def load_gts(result_path: str, max_boxes_per_sample: int, box_cls, verbose: bool = False) \
-        -> EvalBoxes:
+def load_gts(result_path: str, max_boxes_per_sample: int, box_cls, verbose: bool = False) -> EvalBoxes:
     """
-    Loads object predictions from GTs JSON file.
+    Loads bounding boxes from GTs JSON file.
     :param result_path: Path to the .json result file provided by the user.
     :param max_boxes_per_sample: Maximim number of boxes allowed per sample.
     :param box_cls: Type of box to load, e.g. DetectionBox or TrackingBox.
     :param verbose: Whether to print messages to stdout.
-    :return: The deserialized results.
+    :return: EvalBoxes object with the GTs boxes.
     """
 
     # Load from file and check that the format is correct.
@@ -59,6 +58,12 @@ def load_gts(result_path: str, max_boxes_per_sample: int, box_cls, verbose: bool
 
 
 def filter_eval_boxes(boxes: EvalBoxes, classes_filter: dict[str, list[str]]) -> EvalBoxes:
+    """
+    Filter and rename boxes classes
+    :param boxes: EvalBoxes that will be filtered and renamed
+    :param classes_filter: A dict where the keys are new class names and the values are arrays with old class names that will be replaced by the new name. Old classes that not appear in the values will be removed.
+    :return: new EvalBoxes object with the boxes filtered and renamed.
+    """
     new_boxes = EvalBoxes()
     old_classes_to_new_classes_map: dict[str, str] = {}
     for new_class, old_classes_list in classes_filter.items():
@@ -81,7 +86,8 @@ def filter_eval_boxes(boxes: EvalBoxes, classes_filter: dict[str, list[str]]) ->
 
 class GenericDetectionEval(DetectionEval):
     """
-    This is the official nuScenes detection evaluation code.
+    This is an adaptation of the official nuScenes detection evaluation.
+    It will calculate the same metrics, but it can be used for any dataset, given the GTs JSON.
     Results are written to the provided output_dir.
 
     nuScenes uses the following detection metrics:
@@ -108,10 +114,10 @@ class GenericDetectionEval(DetectionEval):
                  verbose: bool = True):
         """
         Initialize a DetectionEval object.
-        :param nusc: A NuScenes object.
         :param config: A DetectionConfig object.
         :param result_path: Path of the nuScenes JSON result file.
-        :param eval_set: The dataset split to evaluate on, e.g. train, val or test.
+        :param gts_path: Path of the GTs JSON file.
+        :param filter_path: Path to JSON filter file. If not given, it will not use any filters.
         :param output_dir: Folder to save plots and results to.
         :param verbose: Whether to print to stdout.
         """

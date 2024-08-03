@@ -9,11 +9,11 @@ from nuscenes.eval.detection.evaluate import DetectionEval
 from classes.GenericDetectionEval import GenericDetectionEval
 
 
-# Código copiado do repositório da NuScenes: https://github.com/nutonomy/nuscenes-devkit/blob/master/python-sdk/nuscenes/eval/detection/evaluate.py
+# Código baseado em: https://github.com/nutonomy/nuscenes-devkit/blob/master/python-sdk/nuscenes/eval/detection/evaluate.py
 if __name__ == "__main__":
 
     # Settings.
-    parser = argparse.ArgumentParser(description='Evaluate nuScenes detection results.',
+    parser = argparse.ArgumentParser(description='Framework de avaliação 3D genérico.',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('gts_path', type=str, 
                         help='''
@@ -25,18 +25,18 @@ if __name__ == "__main__":
 
                         OBS: os filtros usados aqui podem ser sobrescritos pelo argumento "
                         ''')
-    parser.add_argument('result_path', type=str, help='The submission as a JSON file.')
+    parser.add_argument('result_path', type=str, help='O caminho para o arquivo contendo as predições')
     parser.add_argument('--output_dir', type=str, default='~/nuscenes-metrics',
-                        help='Folder to store result metrics, graphs and example visualizations.')
+                        help='Local onde os resultados serão armazenados (métricas, gráficos, etc,)')
     parser.add_argument('--filter_path', type=str, default='',
                         help='Caminho para o JSON com os filtros de classes. Caso não seja fornecido, nenhum filtro será aplicado.')
     parser.add_argument('--config_path', type=str, default='',
-                        help='Path to the configuration file.'
-                             'If no path given, the CVPR 2019 configuration will be used.')
+                        help='Caminho do arquivo de configuração'
+                             'Se não for fornecido, configurações padrões do desafio da NuScenes serão utilizadas.')
     parser.add_argument('--render_curves', type=int, default=0,
-                        help='Whether to render PR and TP curves to disk.')
+                        help='Gera ou não gera gráficos de curvas de PR e TP')
     parser.add_argument('--verbose', type=int, default=1,
-                        help='Whether to print to stdout.')
+                        help='Adiciona ou remove prints no terminal')
     args = parser.parse_args()
 
     result_path_ = os.path.expanduser(args.result_path)
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     filter_path_ = None  # It will be defined soon
 
     if render_curves_:
-        raise NotImplementedError('Os render ainda não estão funcionando de forma genérica')
+        raise NotImplementedError('As renderizações ainda não estão funcionando de forma genérica')
 
     # Load gts_path
     if gts_path_ == 'nuscenes_challenge':
