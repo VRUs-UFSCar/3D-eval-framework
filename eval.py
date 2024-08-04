@@ -31,7 +31,7 @@ if __name__ == "__main__":
     parser.add_argument('--config_path', type=str, default='',
                         help='Caminho do arquivo de configuração'
                              'Se não for fornecido, configurações padrões do desafio da NuScenes serão utilizadas.')
-    parser.add_argument('--render_curves', type=int, default=0,
+    parser.add_argument('--render_curves', type=int, default=1,
                         help='Gera ou não gera gráficos de curvas de PR e TP')
     parser.add_argument('--verbose', type=int, default=1,
                         help='Adiciona ou remove prints no terminal')
@@ -45,9 +45,6 @@ if __name__ == "__main__":
     gts_path_ = args.gts_path
     filter_path_arg = args.filter_path
     filter_path_ = None  # It will be defined soon
-
-    if render_curves_:
-        raise NotImplementedError('As renderizações ainda não estão funcionando de forma genérica')
 
     # Load gts_path
     if gts_path_ == 'nuscenes_challenge':

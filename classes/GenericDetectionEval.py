@@ -4,70 +4,13 @@
 import json
 import os
 
-from nuscenes.eval.common.data_classes import EvalBoxes
-from nuscenes.eval.common.loaders import (
-    filter_eval_boxes,
-    load_prediction
-)
-from nuscenes.eval.detection.data_classes import (
-    DetectionBox,
-    DetectionConfig
-)
+from functions.filter_eval_boxes import filter_eval_boxes
+from functions.load_gts import load_gts
+from functions.render import class_pr_curve, class_tp_curve, dist_pr_curve, summary_plot
+
+from nuscenes.eval.common.loaders import load_prediction
+from nuscenes.eval.detection.data_classes import DetectionBox, DetectionConfig, DetectionMetricDataList, DetectionMetrics
 from nuscenes.eval.detection.evaluate import DetectionEval
-
-def load_gts(result_path: str, max_boxes_per_sample: int, box_cls, verbose: bool = False) -> EvalBoxes:
-    """
-    Loads bounding boxes from GTs JSON file.
-    :param result_path: Path to the .json result file provided by the user.
-    :param max_boxes_per_sample: Maximim number of boxes allowed per sample.
-    :param box_cls: Type of box to load, e.g. DetectionBox or TrackingBox.
-    :param verbose: Whether to print messages to stdout.
-    :return: EvalBoxes object with the GTs boxes.
-    """
-
-    # Load from file and check that the format is correct.
-    with open(result_path) as f:
-        data = json.load(f)
-
-    # Deserialize results and get meta data.
-    all_results = EvalBoxes.deserialize(data, box_cls)
-    if verbose:
-        print("Loaded results from {}. Found detections for {} samples."
-              .format(result_path, len(all_results.sample_tokens)))
-
-    # Check that each sample has no more than x predicted boxes.
-    for sample_token in all_results.sample_tokens:
-        assert len(all_results.boxes[sample_token]) <= max_boxes_per_sample, \
-            "Error: Only <= %d boxes per sample allowed!" % max_boxes_per_sample
-
-    return all_results
-
-
-def filter_eval_boxes(boxes: EvalBoxes, classes_filter: dict[str, list[str]]) -> EvalBoxes:
-    """
-    Filter and rename boxes classes
-    :param boxes: EvalBoxes that will be filtered and renamed
-    :param classes_filter: A dict where the keys are new class names and the values are arrays with old class names that will be replaced by the new name. Old classes that not appear in the values will be removed.
-    :return: new EvalBoxes object with the boxes filtered and renamed.
-    """
-    new_boxes = EvalBoxes()
-    old_classes_to_new_classes_map: dict[str, str] = {}
-    for new_class, old_classes_list in classes_filter.items():
-        for old_class in old_classes_list:
-            old_classes_to_new_classes_map[old_class] = new_class
-    
-    for sample_token in boxes.sample_tokens:
-        old_sample_boxes: list[DetectionBox] = boxes[sample_token]
-        new_sample_boxes: list[DetectionBox] = []
-
-        for old_box in old_sample_boxes:
-            if old_box.detection_name in old_classes_to_new_classes_map:
-                old_box.detection_name = old_classes_to_new_classes_map[old_box.detection_name]
-                new_sample_boxes.append(old_box)
-
-        new_boxes.add_boxes(sample_token, new_sample_boxes)
-    
-    return new_boxes
 
 
 class GenericDetectionEval(DetectionEval):
@@ -135,7 +78,6 @@ class GenericDetectionEval(DetectionEval):
             with open(filter_path, mode='r') as json_file:
                 classes_filter = json.load(json_file)
             
-            print(classes_filter)
             self.cfg.class_names = list(classes_filter.keys())
 
             self.pred_boxes = filter_eval_boxes(self.pred_boxes, classes_filter)
@@ -145,3 +87,36 @@ class GenericDetectionEval(DetectionEval):
             "Samples in split doesn't match samples in predictions."
 
         self.sample_tokens = self.gt_boxes.sample_tokens
+
+    def render(self, metrics: DetectionMetrics, md_list: DetectionMetricDataList) -> None:
+        """
+        Renders various PR and TP curves.
+        :param metrics: DetectionMetrics instance.
+        :param md_list: DetectionMetricDataList instance.
+        """
+        if self.verbose:
+            print('Rendering PR and TP curves')
+
+        def savepath(name):
+            return os.path.join(self.plot_dir, name + '.pdf')
+        
+        detection_names = self.cfg.class_names
+        pretty_detection_names = {}
+        detection_colors = {}
+        for i, detection_name in enumerate(detection_names):
+            detection_colors[detection_name] = f'C{i}'
+            pretty_detection_names[detection_name] = detection_name.replace('_', ' ').capitalize()
+
+        summary_plot(md_list, metrics, min_precision=self.cfg.min_precision, min_recall=self.cfg.min_recall,
+                     dist_th_tp=self.cfg.dist_th_tp, savepath=savepath('summary'), detection_names=detection_names, pretty_detection_names=pretty_detection_names)
+
+        for detection_name in detection_names:
+            class_pr_curve(md_list, metrics, detection_name, self.cfg.min_precision, self.cfg.min_recall,
+                           savepath=savepath(detection_name + '_pr'), pretty_detection_names=pretty_detection_names)
+
+            class_tp_curve(md_list, metrics, detection_name, self.cfg.min_recall, self.cfg.dist_th_tp,
+                           savepath=savepath(detection_name + '_tp'), pretty_detection_names=pretty_detection_names)
+
+        for dist_th in self.cfg.dist_ths:
+            dist_pr_curve(md_list, metrics, dist_th, self.cfg.min_precision, self.cfg.min_recall,
+                          savepath=savepath('dist_pr_' + str(dist_th)), pretty_detection_names=pretty_detection_names, detection_colors=detection_colors)
