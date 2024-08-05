@@ -1,0 +1,6 @@
+{
+    "vehicle": ["bus", "car", "trailer", "truck", "construction_vehicle"],
+    "motorcycle": ["motorcycle"],
+    "bicycle": ["bicycle"],
+    "pedestrian": ["pedestrian"]
+}

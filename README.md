@@ -52,6 +52,7 @@ Fornecendo os seguintes argumentos:
   - `nuscenes_challenge`: utiliza GTs do desafio de detecção NuScenes (em `gts/detection_trainval_val.json`), sem usar nenhum filtro.
   - `nuscenes_vrus-and-cars`: utiliza GTs do desafio de detecção NuScenes (em `gts/detection_trainval_val.json`) utilizando o filtro para pedestre, ciclista, motociclista e carros. O filtro usado está disponível em `filters/nuscenes_vrus-and-cars.json`.
   - `nuscenes_vrus`: utiliza GTs do desafio de detecção NuScenes (em `gts/detection_trainval_val.json`) utilizando o filtro para VRUs (pedestre, ciclista e motociclista). O filtro usado está disponível em `filters/nuscenes_vrus.json`.
+  - `nuscenes_vrus-and-vehicles`: utiliza GTs do desafio de detecção NuScenes (em `gts/detection_trainval_val.json`) utilizando o filtro para pedestre, ciclista, motociclista e veículos. O filtro usado está disponível em `filters/nuscenes_vrus-and-cars.json`
     
     OBS: os filtros usados aqui podem ser sobrescritos pelo argumento "--filter-path"
 - `[result_path]`: O caminho para o arquivo JSON contendo as predições.

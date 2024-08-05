@@ -55,6 +55,9 @@ if __name__ == "__main__":
     elif gts_path_ == 'nuscenes_vrus':
         gts_path_ = 'gts/detection_trainval_val.json'
         filter_path_ = 'filters/nuscenes_vrus.json'
+    elif gts_path_ == 'nuscenes_vrus-and-vehicles':
+        gts_path_ = 'gts/detection_trainval_val.json'
+        filter_path_ = 'filters/nuscenes_vrus-and-vehicles.json'
 
     # Overwrite filter_path if passed by argument
     if filter_path_arg != '':
